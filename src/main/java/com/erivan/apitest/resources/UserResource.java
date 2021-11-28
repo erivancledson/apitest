@@ -1,5 +1,6 @@
 package com.erivan.apitest.resources;
 
+import com.erivan.apitest.domain.User;
 import com.erivan.apitest.domain.dto.UserDTO;
 import com.erivan.apitest.services.UserService;
 import org.modelmapper.ModelMapper;
@@ -41,5 +42,12 @@ public class UserResource {
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(service.create(obj)
                 .getId()).toUri();
         return ResponseEntity.created(uri).build();
+    }
+
+    @PutMapping(value = "/{id}")
+    public ResponseEntity<UserDTO> update(@PathVariable Integer id, @RequestBody UserDTO obj){
+        obj.setId(id);
+        User newObj = service.update(obj);
+        return ResponseEntity.ok().body(mapper.map(newObj, UserDTO.class));
     }
 }
