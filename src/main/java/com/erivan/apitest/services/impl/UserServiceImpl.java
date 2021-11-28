@@ -4,6 +4,7 @@ import com.erivan.apitest.domain.User;
 import com.erivan.apitest.domain.dto.UserDTO;
 import com.erivan.apitest.repositories.UserRepository;
 import com.erivan.apitest.services.UserService;
+import com.erivan.apitest.services.exceptions.DataIntegratyViolationException;
 import com.erivan.apitest.services.exceptions.ObjectNotFoundException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +34,16 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User create(UserDTO obj) {
+        findByEmail(obj);
         //converter de dto para entidade
         return repository.save(modelMapper.map(obj, User.class));
+    }
+
+    private void findByEmail(UserDTO obj){
+        //verifica se existe um email cadastrado
+        Optional<User> user = repository.findByEmail(obj.getEmail());
+        if(user.isPresent()){
+            throw new DataIntegratyViolationException("E-mail já cadastrado no sistema!");
+        }
     }
 }
