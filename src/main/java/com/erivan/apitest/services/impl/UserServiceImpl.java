@@ -45,6 +45,12 @@ public class UserServiceImpl implements UserService {
         return repository.save(modelMapper.map(obj, User.class));
     }
 
+    @Override
+    public void delete(Integer id) {
+        findById(id); //verifica  se o id existe, se não existir lança excecao
+        repository.deleteById(id);
+    }
+
     private void findByEmail(UserDTO obj){
         //verifica se existe um email cadastrado
         Optional<User> user = repository.findByEmail(obj.getEmail());
