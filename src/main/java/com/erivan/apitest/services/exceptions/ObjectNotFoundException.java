@@ -2,7 +2,7 @@ package com.erivan.apitest.services.exceptions;
 
 public class ObjectNotFoundException extends RuntimeException{
 
-    public ObjectNotFoundException(String message){
+    public ObjectNotFoundException(String message) {
         super(message);
     }
 }
