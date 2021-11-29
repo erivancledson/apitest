@@ -3,6 +3,7 @@ package com.erivan.apitest.services.impl;
 import com.erivan.apitest.domain.User;
 import com.erivan.apitest.domain.dto.UserDTO;
 import com.erivan.apitest.repositories.UserRepository;
+import com.erivan.apitest.services.exceptions.ObjectNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -11,6 +12,7 @@ import org.mockito.MockitoAnnotations;
 import org.modelmapper.ModelMapper;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -25,6 +27,8 @@ class UserServiceImplTest {
     public static final String NAME = "Erivan";
     public static final String EMAIL = "erivancled@hotmail.com";
     public static final String PASSWORD = "123";
+    public static final String OBJETO_NAO_ENCONTRADO = "Objeto não encontrado";
+    public static final int INDEX = 0;
 
     @InjectMocks //cria os mocks de mentira
     private UserServiceImpl service;
@@ -63,8 +67,34 @@ class UserServiceImplTest {
         assertEquals(EMAIL, response.getEmail());
     }
 
+    //excessão para objeto não encontrado
     @Test
-    void findAll() {
+    void whenFindByIdThenReturnAnObjectNotFoundException(){
+        when(repository.findById(anyInt())).thenThrow(new ObjectNotFoundException(OBJETO_NAO_ENCONTRADO));
+
+        try{
+            service.findById(ID);
+
+        }catch (Exception ex){
+            //verifica se ObjectNotFoundException é a mesma classe do ex
+            assertEquals(ObjectNotFoundException.class, ex.getClass());
+            //verifica se é a mensagem que está vindo é a mesma que foi informada
+            assertEquals(OBJETO_NAO_ENCONTRADO, ex.getMessage());
+        }
+    }
+
+    @Test
+    void whenFindAllThenReturnAnListOfUsers() {
+        when(repository.findAll()).thenReturn(List.of(user));
+        List<User> response = service.findAll();
+
+        assertNotNull(response); //não pode ser nulo
+        assertEquals(1, response.size()); //tem que vir somente um usuário
+        assertEquals(User.class, response.get(INDEX).getClass()); //objeto que vem nessa lista seja do tipo User
+        assertEquals(ID, response.get(INDEX).getId()); //o primeiro objeto que vem nessa lista é o id
+        assertEquals(NAME, response.get(INDEX).getName());
+        assertEquals(EMAIL, response.get(INDEX).getEmail());
+        assertEquals(PASSWORD, response.get(INDEX).getPassword());
     }
 
     @Test
