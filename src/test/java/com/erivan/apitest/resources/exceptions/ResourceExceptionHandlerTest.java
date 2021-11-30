@@ -43,8 +43,8 @@ class ResourceExceptionHandlerTest {
         assertEquals(StandardError.class, response.getBody().getClass());
         assertEquals(OBJETO_NAO_ENCONTRADO, response.getBody().getError()); //verificar o objeto não encontrado
         assertEquals(404, response.getBody().getStatus()); //verificar se é 404
-        assertNotEquals("/user/2", response.getBody().getPath());
-        assertNotEquals(LocalDateTime.now(), response.getBody().getTimestamp());
+        assertNotEquals("/user/2", response.getBody().getPath()); //não pode ser igual ao path do response /user/2
+        assertNotEquals(LocalDateTime.now(), response.getBody().getTimestamp()); //tem que ser diferente do timesTamp do response
     }
 
     @Test
