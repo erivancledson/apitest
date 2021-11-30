@@ -3,6 +3,7 @@ package com.erivan.apitest.services.impl;
 import com.erivan.apitest.domain.User;
 import com.erivan.apitest.domain.dto.UserDTO;
 import com.erivan.apitest.repositories.UserRepository;
+import com.erivan.apitest.services.exceptions.DataIntegratyViolationException;
 import com.erivan.apitest.services.exceptions.ObjectNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,8 +18,8 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.anyInt;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
 class UserServiceImplTest {
@@ -27,8 +28,11 @@ class UserServiceImplTest {
     public static final String NAME = "Erivan";
     public static final String EMAIL = "erivancled@hotmail.com";
     public static final String PASSWORD = "123";
-    public static final String OBJETO_NAO_ENCONTRADO = "Objeto não encontrado";
     public static final int INDEX = 0;
+
+    public static final String OBJETO_NAO_ENCONTRADO = "Objeto não encontrado";
+    private static final String E_MAIL_JA_CADASTRADO_NO_SISTEMA = "E-mail já cadastrado no sistema";
+
 
     @InjectMocks //cria os mocks de mentira
     private UserServiceImpl service;
@@ -98,16 +102,85 @@ class UserServiceImplTest {
     }
 
     @Test
-    void create() {
+    void whenCreateThenReturnSuccess() {
+        //qualquer user que ele receber retorna o user
+        when(repository.save(any())).thenReturn(user);
+
+        User response = service.create(userDTO);
+
+        assertNotNull(response);
+        assertEquals(User.class, response.getClass()); //tem que ser uma classe do tipo user
+        assertEquals(ID, response.getId()); //o id do parametro vai ser o mesmo id que foi passado por estatico
+        assertEquals(NAME, response.getName());
+        assertEquals(EMAIL, response.getEmail());
+        assertEquals(PASSWORD, response.getPassword());
     }
 
     @Test
-    void update() {
+    void whenCreateThenReturnAnDataIntegrityViolationException() {
+        when(repository.findByEmail(anyString())).thenReturn(optionalUser);
+
+        try{
+            //id 2
+            optionalUser.get().setId(1);
+            service.create(userDTO);
+        } catch (Exception ex) {
+            assertEquals(DataIntegratyViolationException.class, ex.getClass()); //verifica se o tipo da exeção é a informada
+            assertEquals(E_MAIL_JA_CADASTRADO_NO_SISTEMA, ex.getMessage()); //verifica se é a mensagem esperada é essa
+        }
     }
 
 
     @Test
-    void delete() {
+    void whenUpdateThenReturnSuccess() {
+        when(repository.save(any())).thenReturn(user);
+
+        User response = service.update(userDTO);
+
+         assertNotNull(response);
+         assertEquals(User.class, response.getClass());
+         assertEquals(ID, response.getId());
+         assertEquals(NAME, response.getName());
+         assertEquals(EMAIL, response.getEmail());
+         assertEquals(PASSWORD, response.getPassword());
+    }
+
+    @Test
+    void whenUpdateThenReturnAnDataIntegrityViolationException() {
+        when(repository.findByEmail(anyString())).thenReturn(optionalUser);
+
+        try{
+            optionalUser.get().setId(1);
+            service.create(userDTO);
+        } catch (Exception ex) {
+            assertEquals(DataIntegratyViolationException.class, ex.getClass());
+            assertEquals(E_MAIL_JA_CADASTRADO_NO_SISTEMA, ex.getMessage());
+        }
+    }
+
+
+    @Test
+    void deleteWithSuccess() {
+        //retorna o optionalUser
+        when(repository.findById(anyInt())).thenReturn(optionalUser);
+        //doNothing não faça nada quando o repository for chamado no metodo repositorio byId
+        doNothing().when(repository).deleteById(anyInt());
+        service.delete(ID); //metodo de deletar
+        //verifica quantas vezes o metodo foi chamado do deleteById o esperado é 1
+        verify(repository, times(1)).deleteById(anyInt());
+    }
+
+    @Test
+    void whenDeleteThenReturnObjectNotFoundException() {
+        //anyInt = quando o repositorio receber qualquer valor inteiro
+        when(repository.findById(anyInt()))
+                .thenThrow(new ObjectNotFoundException(OBJETO_NAO_ENCONTRADO));
+        try {
+            service.delete(ID);
+        } catch (Exception ex) {
+            assertEquals(ObjectNotFoundException.class, ex.getClass());
+            assertEquals(OBJETO_NAO_ENCONTRADO, ex.getMessage());
+        }
     }
 
     private void startUser(){
